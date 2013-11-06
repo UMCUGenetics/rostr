@@ -1,0 +1,42 @@
+# Local translator
+
+source $NODE
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# RoStr, back to you!
