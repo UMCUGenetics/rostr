@@ -36,8 +36,21 @@ traceReq(){
 	local TRACES=`arrayGet REQUIRES $1`
 	for TRACE in ${TRACES[@]}
 	do
-		PLUNGED+=(`arrayGet PROVIDES $TRACE`)
-		traceReq `arrayGet PROVIDES $TRACE`
+		IGNORETRACE=0
+		# If provided by conf (i.e. prev broken run) don't bother
+		for INNAME in ${WANTEDIN[@]}
+		do
+			if [ "$TRACE" == "$INNAME" ]
+			then
+				IGNORETRACE=1
+				break
+			fi
+		done
+		if [ $IGNORETRACE -eq 0 ]
+		then
+			PLUNGED+=(`arrayGet PROVIDES $TRACE`)
+			traceReq `arrayGet PROVIDES $TRACE`
+		fi
 	done
 }
 
@@ -50,7 +63,6 @@ then {
 		NODENAME=`arrayGet PROVIDES $OUTNAME`
 		PLUNGED+=($NODENAME)
 		traceReq $NODENAME
-		echo ""
 	done
 
 	# Create a shorter pipeline if possible
@@ -72,3 +84,5 @@ then {
 	PIPELINE=() # Empty it first, simply overwriting goes wrong
 	PIPELINE=${REDUCEDPIPE[@]}
 } fi
+
+exit

@@ -16,7 +16,7 @@ arrayGet() {
 	printf '%s' "${!i}"
 }
 
-SCHEDULER='dry'
+SCHEDULER='sge'
 SGE_PE='singlenode'
 source $3
 
