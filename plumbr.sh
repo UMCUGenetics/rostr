@@ -84,5 +84,3 @@ then {
 	PIPELINE=() # Empty it first, simply overwriting goes wrong
 	PIPELINE=${REDUCEDPIPE[@]}
 } fi
-
-exit
