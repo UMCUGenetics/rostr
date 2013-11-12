@@ -4,9 +4,8 @@ do {
 	NODE=./nodes/$NODENAME.sh
 	REQS=(`grep '#RS requires' $NODE | cut -d\  -f3-`)
 	PROS=(`grep '#RS provides' $NODE | cut -d\  -f3-`)
-
 	# Determine what this node provides
-	for PRO in $PROS
+	for PRO in ${PROS[@]}
 	do
 		#echo Provides $PRO
 		if [ `arrayGet PROVIDES $PRO` ]
@@ -19,7 +18,7 @@ do {
 	done
 	
 	# Determine what nodes provide the requirements
-	for REQ in $REQS
+	for REQ in ${REQS[@]}
 	do
 		if [ ! `arrayGet PROVIDES $REQ` ]
 		then
@@ -27,7 +26,7 @@ do {
 			exit
 		fi
 		# Remember the stated requirement
-		declare "REQUIRES_${NODENAME}=${REQ}' `arrayGet REQUIRES $NODENAME`"
+		declare "REQUIRES_${NODENAME}=${REQ} `arrayGet REQUIRES $NODENAME`"
 	done
 } done
 

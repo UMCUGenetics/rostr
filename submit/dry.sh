@@ -1,7 +1,7 @@
 # Dry run for dependency checks
-
-echo "> > Runs:" $NODE
-
+submit() {
+	echo "> > Runs:" $NODE
+}
 
 
 

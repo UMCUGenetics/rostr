@@ -1,7 +1,7 @@
 # Local translator
-
-source $NODE
-
+submit() {
+	source $NODE
+}
 
 
 

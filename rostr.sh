@@ -9,6 +9,17 @@ qsub() {
 	echo $RANDOM
 }
 
+# Stubs for submission steps, override in submission scripts where needed
+preSubmit() {
+	return
+}
+submit() {
+	return
+}
+postSubmit() {
+	return
+}
+
 # Get value from map by key:
 arrayGet() { 
 	local ARRAY=$1 INDEX=$2
@@ -20,13 +31,8 @@ SCHEDULER='jdl'
 SGE_PE='singlenode'
 FILE_CONFIG=$3
 source $FILE_CONFIG
-
-if [ ! $SCHEDULER ]
-then
-	echo "No scheduler set, please set env variable: export SCHEDULER=... (sge,pbs,local,dry,...)"
-	exit
-fi
-
+source ./submit/$SCHEDULER.sh
+			
 STAMP=`date +%s`
 
 # Find our samples and extract their names
@@ -44,7 +50,7 @@ do {
 } done
 echo "Using samples:" ${SAMPLES[@]}
 
-DIR_OUTPUT=$(readlink -f $2)
+export DIR_OUTPUT=$(readlink -f $2)
 # Let's fix the folders
 set +e
 mkdir $DIR_OUTPUT
@@ -61,6 +67,9 @@ set -e
 
 # Call the plumber to check for defects and shortcuts in our pipeline
 source plumbr.sh
+
+# Prepare scheduler
+preSubmit
 
 # Work your way through the pipeline that is left
 for NODENAME in ${PIPELINE[@]}
@@ -141,10 +150,13 @@ do
 			export FILE_LOG_ERR=$DIR_LOG/${NODENAME}.e${STAMP}
 			export FILE_LOG_OUT=$DIR_LOG/${NODENAME}.o${STAMP}
 			export JOB_NAME=RoStr_${SAMPLE}_${NODENAME}
-			SUBARGS=""
-			source ./submit/$SCHEDULER.sh
+			export SUBARGS=""
+			submit
 			declare "${SAMPLE}_JOBIDS_${NODENAME}=${JOBID}"
 			echo "| \ "Job added as `arrayGet ${SAMPLE}_JOBIDS ${NODENAME}`
 		done
 	} fi
 done
+
+# Finish scheduler
+postSubmit
