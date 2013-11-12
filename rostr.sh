@@ -16,9 +16,10 @@ arrayGet() {
 	printf '%s' "${!i}"
 }
 
-SCHEDULER='sge'
+SCHEDULER='jdl'
 SGE_PE='singlenode'
-source $3
+FILE_CONFIG=$3
+source $FILE_CONFIG
 
 if [ ! $SCHEDULER ]
 then
@@ -43,17 +44,20 @@ do {
 } done
 echo "Using samples:" ${SAMPLES[@]}
 
+DIR_OUTPUT=$(readlink -f $2)
 # Let's fix the folders
 set +e
-mkdir $2
-mkdir $2/log
+mkdir $DIR_OUTPUT
+mkdir $DIR_OUTPUT/log
+mkdir $DIR_OUTPUT/runwide
+mkdir $DIR_OUTPUT/runwide/log
 for SAMPLE in ${SAMPLES[@]}
 do
-	mkdir $2/$SAMPLE
-	mkdir $2/$SAMPLE/log
+	mkdir $DIR_OUTPUT/$SAMPLE
+	mkdir $DIR_OUTPUT/$SAMPLE/log
 done
 set -e
-DIR_LOG=$( readlink -f $2/log )
+#DIR_LOG=$( readlink -f $DIR_OUTPUT/log )
 
 # Call the plumber to check for defects and shortcuts in our pipeline
 source plumbr.sh
@@ -61,15 +65,16 @@ source plumbr.sh
 # Work your way through the pipeline that is left
 for NODENAME in ${PIPELINE[@]}
 do
-	echo -----
-	echo "> >" $NODENAME
-	export NODE=./nodes/$NODENAME.sh
-	REQS=`grep '#RS requires' $NODE | cut -d\  -f3-`
-	PROS=`grep '#RS provides' $NODE | cut -d\  -f3-`
+	echo ""
+	echo "X" $NODENAME
+	#export NODE=./nodes/$NODENAME.sh
+	export NODE=$( readlink -f ./nodes/$NODENAME.sh )
+	REQS=(`grep '#RS requires' $NODE | cut -d\  -f3-`)
+	PROS=(`grep '#RS provides' $NODE | cut -d\  -f3-`)
 	#ARGS=`grep '#RS argument' $NODE | cut -d\  -f3-`
-	ARGS=`arrayGet ARGUMENTS $NODENAME`
-	ADDS=`grep '#RS addition' $NODE | cut -d\  -f3-`
-	TYPE=`grep '#RS widenode' $NODE | cut -d\  -f2-`
+	ARGS=(`arrayGet ARGUMENTS $NODENAME`)
+	ADDS=(`grep '#RS addition' $NODE | cut -d\  -f3-`)
+	TYPE=(`grep '#RS widenode' $NODE | cut -d\  -f2-`)
 
 	# Node is run specific: wide over (all) samples
 	if [ "$TYPE" = 'widenode' ]
@@ -117,6 +122,11 @@ do
 		# Unspecified, take all
 		else
 			echo Full width detected: ${SAMPLES[@]}
+			export FILE_OUTPUT=$DIR_OUTPUT/runwide/runwide
+			export DIR_LOG=$DIR_OUTPUT/runwide/log
+			export FILE_LOG_ERR=$DIR_LOG/${NODENAME}.e${STAMP}
+			export FILE_LOG_OUT=$DIR_LOG/${NODENAME}.o${STAMP}
+			export JOB_NAME=RoStr_WIDE_${NODENAME}
 			JOBID=$RANDOM
 			declare "WIDE_JOBIDS_${NODENAME}=${JOBID}"
 		fi
@@ -125,13 +135,16 @@ do
 	else {
 		for SAMPLE in ${SAMPLES[@]}
 		do
-			echo ">" $SAMPLE
-			export FILE_OUTPUT=$2/$SAMPLE/$SAMPLE
-			export DIR_LOG=$2/$SAMPLE/log
+			echo "|\ "$SAMPLE
+			export FILE_OUTPUT=$DIR_OUTPUT/$SAMPLE/$SAMPLE
+			export DIR_LOG=$DIR_OUTPUT/$SAMPLE/log
+			export FILE_LOG_ERR=$DIR_LOG/${NODENAME}.e${STAMP}
+			export FILE_LOG_OUT=$DIR_LOG/${NODENAME}.o${STAMP}
+			export JOB_NAME=RoStr_${SAMPLE}_${NODENAME}
 			SUBARGS=""
 			source ./submit/$SCHEDULER.sh
 			declare "${SAMPLE}_JOBIDS_${NODENAME}=${JOBID}"
-			echo `arrayGet ${SAMPLE}_JOBIDS ${NODENAME}`
+			echo "| \ "Job added as `arrayGet ${SAMPLE}_JOBIDS ${NODENAME}`
 		done
 	} fi
 done

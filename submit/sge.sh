@@ -13,7 +13,7 @@ done
 HOLDFOR=""
 if [ ${#REQS} -ne "0" ]
 then
-	echo $REQS
+	#echo $REQS
 	#HOLDFOR="-hold_jid"
 	for REQ in $REQS
 	do
@@ -27,14 +27,14 @@ fi
 JOBID=`qsub \
 	$HOLDFOR \
 	-V \
-	-N RoStr_${SAMPLE}_${NODENAME} \
-	-e $DIR_LOG/${SAMPLE}_${NODENAME}.e${STAMP} \
-	-o $DIR_LOG/${SAMPLE}_${NODENAME}.o${STAMP} \
+	-N $JOB_NAME \
+	-e $FILE_LOG_ERR \
+	-o $FILE_LOG_OUT \
 	$SUBARGS \
 	$NODE \
 	$ADDS`
 	
-echo $JOBID
+#echo $JOBID
 # Fix the JobID
 JOBID=`echo $JOBID | cut -d\  -f3`
 
