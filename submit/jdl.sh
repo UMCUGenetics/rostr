@@ -14,7 +14,7 @@ jdlSubmitText() {
 	echo "   description = ["
 	echo "    JobType = \"Normal\";"
 	echo "    Executable = \"/usr/bin/bash\";"
-	echo "    Arguments = \"$NODE\";"
+	echo "    Arguments = \"$FILE_JDLJOB\";"
 	echo "    InputSandbox = {$INPUTREQS};"
 	echo "    StdOutput = \"$FILE_LOG_ERR\";"
 	echo "    StdError = \"$FILE_LOG_OUT\";"
@@ -24,18 +24,44 @@ jdlSubmitText() {
 	echo "  ];"
 }
 
-jdlPostSubmitText(){
+jdlPostSubmitText() {
     echo " ];"
     echo " Dependencies = {$DEPENDENCIES};"
-	echo "]"
+	echo "];"
+}
+
+jdlCreateJobFile() {
+	# Create a job file containing all set variables
+	FILE_JDLJOB=$DIR_OUTPUT/jdlsubmission/$JOB_NAME.sh
+	echo "# Set all variables for this script first" > $FILE_JDLJOB
+	USEDVARIABLES=(`grep -o '\$[a-zA-Z0-9_]*' $NODE | sort | uniq`)
+	for USEDVAR in ${USEDVARIABLES[@]}
+	do
+		VARNAME=`echo $USEDVAR | cut -b 1 --complement`
+		VARVAL=`eval echo $USEDVAR`
+		if [ ! $VARVAL = "" ]
+		then
+			echo "$VARNAME=$VARVAL" >> $FILE_JDLJOB
+			#continue
+		else
+			#MISSINGVARS="$MISSINGVARS $NODENAME:$VARNAME"
+			echo $VARNAME is unset!
+		fi
+	done
+	echo -e "" >> $FILE_JDLJOB
+	echo "# Copy of the job itself" >> $FILE_JDLJOB
+	cat $NODE >> $FILE_JDLJOB
 }
 
 preSubmit() {
 	DEPENDENCIES=""
-	FILE_JDLSPEC=$DIR_OUTPUT/dag.jdl
+	set +e
+	mkdir $DIR_OUTPUT/jdlsubmission
+	set -e
+	FILE_JDLSPEC=$DIR_OUTPUT/jdlsubmission/rostr.jdl
 	jdlPreSubmitText > $FILE_JDLSPEC
 }
-	
+
 submit() {
 	INPUTREQS=""
 	if [ ${#REQS[@]} -ne "0" ]
@@ -48,7 +74,6 @@ submit() {
 			DEPENDENCY=`arrayGet PROVIDES $REQ`
 			DEPENDENCIES="$DEPENDENCIES{RoStr_${SAMPLE}_${DEPENDENCY}, $JOB_NAME}"
 		done
-			
 	fi
 
 	RETURNFILES=""
@@ -57,7 +82,8 @@ submit() {
 		RETURNFILES=""
 		RETURNFILES=`printf \"$FILE_OUTPUT.'%s\"\n' "${PROS[@]}"|paste -sd','`
 	fi
-			
+	
+	jdlCreateJobFile	
 	jdlSubmitText >> $FILE_JDLSPEC
 	JOBID=$JOB_NAME
 }
