@@ -13,8 +13,7 @@ submit() {
 	HOLDFOR=""
 	if [ ${#REQS} -ne "0" ]
 	then
-		#echo $REQS
-		#HOLDFOR="-hold_jid"
+	
 		for REQ in $REQS
 		do
 			REQNODE=`arrayGet PROVIDES $REQ`
@@ -33,10 +32,7 @@ submit() {
 		$SUBARGS \
 		$NODE \
 		$ADDS`
-		
-	#echo $JOBID
+	
 	# Fix the JobID
 	JOBID=`echo $JOBID | cut -d\  -f3`
 }
-
-# RoStr, back to you!

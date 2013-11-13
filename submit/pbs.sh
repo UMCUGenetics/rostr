@@ -13,7 +13,6 @@ submit() {
 	HOLDFOR=""
 	if [ ${#REQS} -ne "0" ]
 	then
-		#echo $REQS
 		HOLDFOR="-W depend=afterok"
 		for REQ in $REQS
 		do
@@ -34,9 +33,3 @@ submit() {
 		$NODE \
 		$ADDS`
 }
-
-
-
-
-
-# RoStr, back to you!

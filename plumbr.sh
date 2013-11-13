@@ -56,7 +56,7 @@ traceReq(){
 
 # Brackets to ignore this block of useless code...
 if false; then
-# Look through the pipe and see what it is connected to ignoring additional settings
+# Look through the pipe and see what it is connected to, ignoring additional settings
 traceReqEnd(){
 	local TRACES=`arrayGet REQUIRES $1`
 	for TRACE in ${TRACES[@]}
