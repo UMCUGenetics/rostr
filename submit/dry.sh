@@ -1,6 +1,7 @@
 # Dry run for dependency checks
 preSubmit() {
 	MISSINGVARS=""
+	KNOWNVARS=""
 }
 
 submit() {
@@ -13,7 +14,7 @@ submit() {
 		if [ ! $VARVAL = "" ]
 		then
 			#echo $VARNAME=$VARVAL
-			continue
+			KNOWNVARS="$KNOWNVARS $NODENAME:$VARNAME=$VARVAL"
 		else
 			MISSINGVARS="$MISSINGVARS $NODENAME:$VARNAME"
 			#echo $VARNAME is unset!
@@ -24,6 +25,8 @@ submit() {
 }
 
 postSubmit () {
+	echo "Arguments that were set:"
+	echo $KNOWNVARS | tr -s [:space:] \\n | sort | uniq
 	echo "Arguments that were not set:"
 	echo $MISSINGVARS | tr -s [:space:] \\n | sort | uniq
 }
