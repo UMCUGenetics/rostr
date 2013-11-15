@@ -97,7 +97,7 @@ submit() {
 	if [ ${#PROS[@]} -ne "0" ]
 	then
 		RETURNFILES=""
-		RETURNFILES=`printf \"$FILE_OUTPUT.'%s\"\n' "${PROS[@]}"|paste -sd','`
+		RETURNFILES=`printf \"$FILE_OUTPUT.'%s\"\n' "${PROS[@]}" | paste -sd','`
 	fi
 	
 	jdlCreateJobFile	

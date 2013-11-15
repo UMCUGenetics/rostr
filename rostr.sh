@@ -1,8 +1,15 @@
 set -e
 
+# Hack to get around the hashmap versus dot fight in bash
+replaceDots() {
+	INSTRING=$1
+	echo ${INSTRING//\./___DOT___}
+}
+
 # Get value from map by key:
 arrayGet() { 
 	local ARRAY=$1 INDEX=$2
+	INDEX=`replaceDots $INDEX` # Hacky-hacky-hacky-hoo
 	local i="${ARRAY}_$INDEX"
 	printf '%s' "${!i}"
 }
@@ -24,7 +31,7 @@ SAMPLES=()
 for SAMPLEPATH in ${SAMPLEPATHS[@]}
 do {
 	SAMPLE=`echo $SAMPLEPATH | awk -F"/"  '{ print  $NF }'`
-	SAMPLE=`echo $SAMPLE | cut -d. -f1`
+	SAMPLE=`getSampleName $SAMPLE`
 	SAMPLES+=($SAMPLE)
 	SAMPLEFULLPATH=$( readlink -f $SAMPLEPATH )
 	declare "INPUT_${SAMPLE}=${SAMPLEFULLPATH}"

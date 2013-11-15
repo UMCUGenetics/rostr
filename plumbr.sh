@@ -4,15 +4,17 @@ do {
 	NODE=$DIR_NODES/$NODENAME.sh
 	REQS=(`grep '#RS requires' $NODE | cut -d\  -f3-`)
 	PROS=(`grep '#RS provides' $NODE | cut -d\  -f3-`)
+	
 	# Determine what this node provides
 	for PRO in ${PROS[@]}
 	do
-		#echo Provides $PRO
 		if [ `arrayGet PROVIDES $PRO` ]
 		then
 			echo COLLISION: $PRO by $NODENAME is already provided by `arrayGet PROVIDES $PRO`
 			exit
 		fi
+		# Get rid of dots for variable declaration
+		PRO=`replaceDots $PRO`
 		# Remember the provided output
 		declare "PROVIDES_${PRO}=${NODENAME}"
 	done
