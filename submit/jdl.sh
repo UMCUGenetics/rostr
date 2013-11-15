@@ -42,10 +42,11 @@ jdlCreateJobFile() {
 		if [ ! $VARVAL = "" ]
 		then
 			echo "$VARNAME=$VARVAL" >> $FILE_JDLJOB
-			#continue
 		else
-			#MISSINGVARS="$MISSINGVARS $NODENAME:$VARNAME"
-			echo $VARNAME is unset!
+			if [ ${#VARNAME} -gt 1 ]
+			then
+				echo Unset variable: $VARNAME
+			fi
 		fi
 	done
 	echo -e "" >> $FILE_JDLJOB
@@ -63,6 +64,16 @@ preSubmit() {
 }
 
 submit() {
+	# Obtain FILE_ requirements, TODO: Finish putting it in the JDL list
+	WTFFILEVALS=""
+	USEDFILES=(`grep -o '\$FILE_[a-zA-Z0-9_]*' $NODE | sort | uniq`)
+	for USEDFILE in ${USEDFILES[@]}
+	do
+		VARVAL=`eval echo $USEDFILE`
+		WTFFILEVALS="$WTFFILEVALS $VARVAL"
+	done
+	
+	# Obtain file dependencies from other jobs
 	INPUTREQS=""
 	if [ ${#REQS[@]} -ne "0" ]
 	then
@@ -75,7 +86,8 @@ submit() {
 			DEPENDENCIES="$DEPENDENCIES{RoStr_${SAMPLE}_${DEPENDENCY}, $JOB_NAME}"
 		done
 	fi
-
+		
+	# Obtain what files are expected to be returned from this job
 	RETURNFILES=""
 	if [ ${#PROS[@]} -ne "0" ]
 	then
