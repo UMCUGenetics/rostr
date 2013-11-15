@@ -1,3 +1,4 @@
+# Create the DAG description in JDL format
 jdlPreSubmitText() {
 	echo "[" 
     echo " Type=\"dag\";"
@@ -24,14 +25,15 @@ jdlSubmitText() {
 	echo "  ];"
 }
 
+# Close the DAG description in JDL format, include the dependency list
 jdlPostSubmitText() {
     echo " ];"
     echo " Dependencies = {$DEPENDENCIES};"
 	echo "];"
 }
 
+# Create a job file containing all set variables, required to make the job run stand-alone
 jdlCreateJobFile() {
-	# Create a job file containing all set variables
 	FILE_JDLJOB=$DIR_OUTPUT/jdlsubmission/$JOB_NAME.sh
 	echo "# Set all variables for this script first" > $FILE_JDLJOB
 	USEDVARIABLES=(`grep -o '\$[a-zA-Z0-9_]*' $NODE | sort | uniq`)
@@ -64,21 +66,22 @@ preSubmit() {
 }
 
 submit() {
-	# Obtain FILE_ requirements, TODO: Finish putting it in the JDL list
-	WTFFILEVALS=""
-	USEDFILES=(`grep -o '\$FILE_[a-zA-Z0-9_]*' $NODE | sort | uniq`)
-	for USEDFILE in ${USEDFILES[@]}
-	do
-		VARVAL=`eval echo $USEDFILE`
-		WTFFILEVALS="$WTFFILEVALS $VARVAL"
-	done
+	# Obtain FILE_ requirements
+	INPUTREQS="\"$NODE\""
+	USEDFILES=`grep -o '\$FILE_[a-zA-Z0-9_]*' $NODE | sort | uniq | paste -sd','` # Obtain whatever starts with $FILE
+	USEDFILES=${USEDFILES//\$FILE_OUTPUT/} # Remove FILE_OUTPUT occurrences, handled seperately later on
+	USEDFILES=`eval echo $USEDFILES` # Evaluate the variables starting with $FILE
+	USEDFILES=\"${USEDFILES//\,/\"\,\"}\" # Fix the darn quotes around all elements
+	if [ ${#USEDFILES[@]} -ne "0" ]
+	then
+		INPUTREQS="$INPUTREQS,$USEDFILES"
+	fi
 	
 	# Obtain file dependencies from other jobs
-	INPUTREQS=""
 	if [ ${#REQS[@]} -ne "0" ]
 	then
-		INPUTREQS=`printf \"$FILE_OUTPUT.'%s\"\n' "${REQS[@]}"|paste -sd','`
-		INPUTREQS="$INPUTREQS, \"$NODE\""
+		INPUTREQSTEMP=`printf \"$FILE_OUTPUT.'%s\"\n' "${REQS[@]}" | paste -sd','`
+		INPUTREQS="$INPUTREQS,$INPUTREQSTEMP"
 		
 		for REQ in ${REQS[@]}
 		do
@@ -86,6 +89,8 @@ submit() {
 			DEPENDENCIES="$DEPENDENCIES{RoStr_${SAMPLE}_${DEPENDENCY}, $JOB_NAME}"
 		done
 	fi
+	INPUTREQS=${INPUTREQS//\"\"\,/} # Remove empty items from the list
+	INPUTREQS=${INPUTREQS//\,/\,\ } # Add a nice space after every comma
 		
 	# Obtain what files are expected to be returned from this job
 	RETURNFILES=""
