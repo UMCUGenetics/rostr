@@ -16,9 +16,9 @@ postSubmit() {
 	return
 }
 
-# Stub for retrieving a sample name
+# Stub for retrieving a sample name from a path
 getSampleName() {
-	echo $1 | cut -d. -f1 | cut -d\_ -f1
+	echo $1 | awk -F"/"  '{ print  $NF }' | cut -d. -f1 | cut -d\_ -f1
 }
 
 # Values to work with

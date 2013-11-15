@@ -30,8 +30,7 @@ SAMPLEPATHS=`find $1 -name $INPUTEXT`
 SAMPLES=()
 for SAMPLEPATH in ${SAMPLEPATHS[@]}
 do {
-	SAMPLE=`echo $SAMPLEPATH | awk -F"/"  '{ print  $NF }'`
-	SAMPLE=`getSampleName $SAMPLE`
+	SAMPLE=`getSampleName $SAMPLEPATH`
 	SAMPLES+=($SAMPLE)
 	SAMPLEFULLPATH=$( readlink -f $SAMPLEPATH )
 	declare "INPUT_${SAMPLE}=${SAMPLEFULLPATH}"
