@@ -37,8 +37,8 @@ do {
 } done
 echo "Using samples:" ${SAMPLES[@]}
 
-export DIR_OUTPUT=$(readlink -f $2)
 # Let's fix the folders
+DIR_OUTPUT=$2
 set +e
 mkdir $DIR_OUTPUT
 mkdir $DIR_OUTPUT/log
@@ -49,6 +49,7 @@ do
 	mkdir $DIR_OUTPUT/$SAMPLE
 	mkdir $DIR_OUTPUT/$SAMPLE/log
 done
+export DIR_OUTPUT=$(readlink -f $DIR_OUTPUT)
 set -e
 
 # Call the plumber to check for defects and shortcuts in our pipeline
@@ -131,6 +132,7 @@ do
 		for SAMPLE in ${SAMPLES[@]}
 		do
 			echo "|\ "$SAMPLE
+			export SAMPLE=$SAMPLE
 			export FILE_INPUT=`arrayGet INPUT $SAMPLE`
 			export FILE_OUTPUT=$DIR_OUTPUT/$SAMPLE/$SAMPLE
 			export DIR_LOG=$DIR_OUTPUT/$SAMPLE/log
@@ -139,8 +141,8 @@ do
 			export JOB_NAME=RoStr_${SAMPLE}_${NODENAME}
 			export SUBARGS=""
 			submit
-			declare "${SAMPLE}_JOBIDS_${NODENAME}=${JOBID}"
-			echo "| \ "Job added as `arrayGet ${SAMPLE}_JOBIDS ${NODENAME}`
+			declare "JOBIDS_${SAMPLE}_${NODENAME}=${JOBID}"
+			#echo "| \ "Job added as `arrayGet JOBIDS_${SAMPLE} ${NODENAME}`
 		done
 	} fi
 done

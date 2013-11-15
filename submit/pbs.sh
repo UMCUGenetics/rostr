@@ -1,6 +1,6 @@
 # PBS translator
 submit() {
-	for ARG in $ARGS
+	for ARG in ${ARGS[@]}
 	do
 		ANAME=`echo $ARG | cut -d ':' -f1`
 		AVAL=`echo $ARG | cut -d ':' -f2`
@@ -14,10 +14,10 @@ submit() {
 	if [ ${#REQS} -ne "0" ]
 	then
 		HOLDFOR="-W depend=afterok"
-		for REQ in $REQS
+		for REQ in ${REQS[@]}
 		do
 			REQNODE=`arrayGet PROVIDES $REQ`
-			HOLDID=`arrayGet ${SAMPLE}_JOBIDS ${REQNODE}`
+			HOLDID=`arrayGet JOBIDS_${SAMPLE} ${REQNODE}`
 			HOLDFOR="$HOLDFOR:$HOLDID"
 		done
 	fi
