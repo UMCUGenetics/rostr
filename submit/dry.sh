@@ -23,8 +23,10 @@ submit() {
 }
 
 postSubmit () {
-	echo "Arguments that were set:"
+	echo ""
+	echo "Variables that were set:"
 	echo $KNOWNVARS | tr -s [:space:] \\n | sort | uniq
-	echo "Arguments that were not set:"
+	echo ""
+	echo "Variables that were not set (or contained a space):"
 	echo $MISSINGVARS | tr -s [:space:] \\n | sort | uniq
 }
