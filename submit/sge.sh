@@ -10,17 +10,9 @@ submit() {
 		fi
 	done
 
-	HOLDFOR=""
-	if [ ${#REQS} -ne "0" ]
-	then
-	
-		for REQ in ${REQS[@]}
-		do
-			REQNODE=`arrayGet PROVIDES $REQ`
-			HOLDID=`arrayGet JOBIDS_${SAMPLE} ${REQNODE}`
-			HOLDFOR="$HOLDFOR -hold_jid $HOLDID"
-		done
-	fi
+	# Obtain hold ids, replace splitting tag by actual arguments
+	HOLDFOR=`getHoldIds`
+	HOLDFOR=${HOLDFOR//;/ -hold_jid }
 
 	# Submit to SGE
 	JOBID=`qsub \

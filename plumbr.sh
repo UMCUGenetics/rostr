@@ -4,6 +4,14 @@ do {
 	NODE=$DIR_NODES/$NODENAME.sh
 	REQS=(`grep '#RS requires' $NODE | cut -d\  -f3-`)
 	PROS=(`grep '#RS provides' $NODE | cut -d\  -f3-`)
+	TYPE=(`grep '#RS widenode' $NODE | cut -d\  -f2-`)
+	
+	if [ "$TYPE" = 'widenode' ]
+	then
+		WIDENODES+=($NODENAME)
+		declare "WIDENODES_${NODENAME}=1" 
+	fi
+	#echo ${WIDENODES[@]}
 	
 	# Determine what this node provides
 	for PRO in ${PROS[@]}

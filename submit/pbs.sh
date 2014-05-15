@@ -10,18 +10,15 @@ submit() {
 		fi
 	done
 
+	# Obtain hold ids, replace splitting tag by actual arguments
 	HOLDFOR=""
 	if [ ${#REQS} -ne "0" ]
 	then
-		HOLDFOR="-W depend=afterok"
-		for REQ in ${REQS[@]}
-		do
-			REQNODE=`arrayGet PROVIDES $REQ`
-			HOLDID=`arrayGet JOBIDS_${SAMPLE} ${REQNODE}`
-			HOLDFOR="$HOLDFOR:$HOLDID"
-		done
+		HOLDFOR=`getHoldIds`
+		HOLDFOR=${HOLDFOR//;/:}
+		HOLDFOR="-W depend=afterok$HOLDFOR"
 	fi
-
+	
 	# Submit to PBS
 	JOBID=`qsub \
 		$HOLDFOR \

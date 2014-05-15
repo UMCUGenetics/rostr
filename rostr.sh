@@ -24,6 +24,7 @@ source $FILE_CONFIG
 source $DIR_BASE/submit/$SCHEDULER.sh
 			
 STAMP=`date +%s`
+WIDENODES=()
 
 # Find our samples and extract their names
 SAMPLEPATHS=`find $1 -name $INPUTEXT`
@@ -75,57 +76,18 @@ do
 	# Node is run specific: wide over (all) samples
 	if [ "$TYPE" = 'widenode' ]
 	then {
-		# Configured to be partial
-		PARTIALS=`arrayGet PARTIAL $NODENAME`
-		if [ ! "" = "$PARTIALS" ]
-		then
-			echo Partial wide detected: $PARTIALS
-			PARTIALS=($PARTIALS) # Array pl0x
-			for PART in ${PARTIALS[@]}
-			do
-				LBLUSE=`echo $PART | cut -d\; -f1`
-				LBLALI=`echo $PART | cut -d\; -f2`
-				
-				#echo "From column/alias: "$LBLCOL", take labels: "$LBLUSE", and write to: "$LBLALI
-				LBLUSEARR=$(echo $LBLUSE | tr "," "\n")
-				for LBLUSEELE in $LBLUSEARR
-				do
-					LBLTMP=`echo $LBLUSEELE | cut -d\= -f1`
-					LBLLBL=`echo $LBLUSEELE | cut -d\= -f2`
-					LBLFIL=`echo $LBLTMP | cut -d\: -f1`
-					LBLCOL=`echo $LBLTMP | cut -d\: -f2`
-					
-					# TODO: Swap ALIAS check below with this right underneath
-					if [ `arrayGet LABELS_ALIAS $LBLLBL` ]
-					then
-						echo found job as: `arrayGet LABELS_ALIAS $LBLLBL`
-					else
-						if [ $LBLTMP = "ALIAS" ]
-						then
-							echo MISSING: partial dependency $LBLUSEELE "(" $PART ")" is not known in ALIAS
-							exit
-						fi
-						echo Lookup for $LBLUSEELE in file returns:
-						awk -v col=$LBLCOL -v lbl=$LBLLBL '$col == lbl { print $1 }' $LBLFIL
-					fi
-				done
-				JOBID=$RANDOM
-				echo declaring key LABELS_ALIAS_${LBLALI} as value $JOBID #JOBIDHERE_FOR_${LBLUSE}
-				declare "LABELS_ALIAS_${LBLALI}=$JOBID"#JOBIDHERE_FOR_${LBLUSE}
-				#declare "${LBLALI}_JOBIDS_${NODENAME}=${JOBID}"
-			done
-			
-		# Unspecified, take all
-		else
 			echo Full width detected: ${SAMPLES[@]}
+			echo "|\ "WIDE
+			export SAMPLE=WIDE
+			export FILE_INPUT=`arrayGet INPUT ${SAMPLE}`
 			export FILE_OUTPUT=$DIR_OUTPUT/runwide/runwide
 			export DIR_LOG=$DIR_OUTPUT/runwide/log
 			export FILE_LOG_ERR=$DIR_LOG/${NODENAME}.e${STAMP}
 			export FILE_LOG_OUT=$DIR_LOG/${NODENAME}.o${STAMP}
-			export JOB_NAME=RoStr_WIDE_${NODENAME}
+			export JOB_NAME=RoStr_${SAMPLE}_${NODENAME}
+			submit
 			JOBID=$RANDOM
-			declare "WIDE_JOBIDS_${NODENAME}=${JOBID}"
-		fi
+			declare "JOBIDS_${SAMPLE}_${NODENAME}=${JOBID}"
 	}
 	# Node is sample specific: single sample
 	else {

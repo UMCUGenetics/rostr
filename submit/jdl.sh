@@ -42,9 +42,9 @@ jdlCreateJobFile() {
 		VARNAME=`echo $USEDVAR | cut -b 1 --complement`
 		VARVAL=`eval echo $USEDVAR`
 		# Check if the found variable makes sense
-		if [ ! $VARVAL = "" ] && [ ! $VARNAME = "" ]
+		if [ ! "$VARVAL" = "" ] && [ ! "$VARNAME" = "" ]
 		then
-			echo "$VARNAME=$VARVAL" >> $FILE_JDLJOB
+			echo "$VARNAME=\"$VARVAL\"" >> $FILE_JDLJOB
 		else
 			if [ ${#VARNAME} -gt 1 ]
 			then

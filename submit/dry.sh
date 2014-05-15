@@ -6,12 +6,12 @@ preSubmit() {
 
 submit() {
 	echo "> > Runs:" $NODE
-	USEDVARIABLES=(`grep -o '\$[a-zA-Z_]*' $NODE | sort | uniq`)
+	USEDVARIABLES=(`grep -o '\$[a-zA-Z0-9_]*' $NODE | sort | uniq`)
 	for USEDVAR in ${USEDVARIABLES[@]}
 	do
 		VARNAME=`echo $USEDVAR | cut -b 1 --complement`
 		VARVAL=`eval echo $USEDVAR`
-		if [ ! $VARVAL = "" ]
+		if [ ! "$VARVAL" = "" ]
 		then
 			KNOWNVARS="$KNOWNVARS $NODENAME:$VARNAME=$VARVAL"
 		else
@@ -27,6 +27,6 @@ postSubmit () {
 	echo "Variables that were set:"
 	echo $KNOWNVARS | tr -s [:space:] \\n | sort | uniq
 	echo ""
-	echo "Variables that were not set (or contained a space):"
+	echo "Variables that were not set:"
 	echo $MISSINGVARS | tr -s [:space:] \\n | sort | uniq
 }
