@@ -94,3 +94,34 @@ then {
 	PIPELINE=() # Empty it first, simply overwriting goes wrong
 	PIPELINE=${REDUCEDPIPE[@]}
 } fi
+
+# Additionally check if step is necessary for this sample at this moment, could skip if output exists and is newer than inputs and NODE.sh
+needsRun() {
+	NODEDATE=`date -r $NODE +%s`
+	OUTDATE=-2
+	INDATE=-1
+	for PRO in ${PROS[@]}
+	do
+		if [ -f $FILE_OUTPUT.$PRO ]
+		then
+			OUTDATE=`date -r $FILE_OUTPUT.$PRO +%s`
+			for REQ in ${REQS[@]}
+			do
+				INDATE=`date -r $FILE_OUTPUT.$REQ +%s`
+				if (( $OUTDATE < $INDATE ))
+				then
+					rm $FILE_OUTPUT.$PRO
+					return 0
+				fi
+			done
+			if (( $OUTDATE < $NODEDATE ))
+			then
+				rm $FILE_OUTPUT.$PRO
+				return 0
+			fi
+		else
+			return 0
+		fi
+	done
+	return 1
+}

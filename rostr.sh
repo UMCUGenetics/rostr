@@ -66,13 +66,16 @@ do
 	echo "X" $NODENAME
 	#export NODE=./nodes/$NODENAME.sh
 	export NODE=$( readlink -f $DIR_NODES/$NODENAME.sh )
-	REQS=(`grep '#RS requires' $NODE | cut -d\  -f3-`)
-	PROS=(`grep '#RS provides' $NODE | cut -d\  -f3-`)
+	export REQS=(`grep '^#RS requires' $NODE | cut -d\  -f3-`)
+	export PROS=(`grep '^#RS provides' $NODE | cut -d\  -f3-`)
 	#ARGS=`grep '#RS argument' $NODE | cut -d\  -f3-`
-	ARGS=(`arrayGet ARGUMENTS $NODENAME`)
-	ADDS=(`grep '#RS addition' $NODE | cut -d\  -f3-`)
-	TYPE=(`grep '#RS widenode' $NODE | cut -d\  -f2-`)
-
+	export ARGS=(`arrayGet ARGUMENTS $NODENAME`)
+	export ADDS=(`grep '^#RS addition' $NODE | cut -d\  -f3-`)
+	export TYPE=(`grep '^#RS widenode' $NODE | cut -d\  -f2-`)
+	
+	#echo $NODE $REQS $PROS
+	#grep '^#RS requires' $NODE 
+	
 	# Node is run specific: wide over (all) samples
 	if [ "$TYPE" = 'widenode' ]
 	then {
@@ -102,8 +105,12 @@ do
 			export FILE_LOG_OUT=$DIR_LOG/${NODENAME}.o${STAMP}
 			export JOB_NAME=RoStr_${SAMPLE}_${NODENAME}
 			export SUBARGS=""
-			submit
-			declare "JOBIDS_${SAMPLE}_${NODENAME}=${JOBID}"
+			if needsRun;
+			then
+				echo "LETS DO THIS!"
+				submit
+				declare "JOBIDS_${SAMPLE}_${NODENAME}=${JOBID}"
+			fi
 			#echo "| \ "Job added as `arrayGet JOBIDS_${SAMPLE} ${NODENAME}`
 		done
 	} fi
