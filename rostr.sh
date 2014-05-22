@@ -14,15 +14,31 @@ arrayGet() {
 	printf '%s' "${!i}"
 }
 
+# Determine script location and working location
 DIR_BASE=$(dirname $0) # Dir script resides in
 DIR_BASE=$(readlink -f $DIR_BASE) # Obtain the full path, otherwise nodes go crazy
 DIR_CUR=${PWD} # Dir script is called from
 
+# Load main config file
 FILE_CONFIG=$3
 source $DIR_BASE/propr.sh
 source $FILE_CONFIG
+
+# Load additional config files and set variables
+for ADDITIONAL_ARG in "${@:3:$#}"
+do {
+	if [[ -f $ADDITIONAL_ARG ]]
+	then
+		echo Loading: $ADDITIONAL_ARG
+		source $ADDITIONAL_ARG
+	else
+		echo Declaring: $ADDITIONAL_ARG "(untested)"
+		declare $ADDITIONAL_ARG
+	fi
+} done
+
+# On to preparing for the run
 source $DIR_BASE/submit/$SCHEDULER.sh
-			
 STAMP=`date +%s`
 WIDENODES=()
 
@@ -62,25 +78,18 @@ preSubmit
 # Work your way through the pipeline that is left
 for NODENAME in ${PIPELINE[@]}
 do
-	echo ""
-	echo "X" $NODENAME
-	#export NODE=./nodes/$NODENAME.sh
+	echo -e "\nNode: $NODENAME"
 	export NODE=$( readlink -f $DIR_NODES/$NODENAME.sh )
 	export REQS=(`grep '^#RS requires' $NODE | cut -d\  -f3-`)
 	export PROS=(`grep '^#RS provides' $NODE | cut -d\  -f3-`)
-	#ARGS=`grep '#RS argument' $NODE | cut -d\  -f3-`
 	export ARGS=(`arrayGet ARGUMENTS $NODENAME`)
 	export ADDS=(`grep '^#RS addition' $NODE | cut -d\  -f3-`)
 	export TYPE=(`grep '^#RS widenode' $NODE | cut -d\  -f2-`)
-	
-	#echo $NODE $REQS $PROS
-	#grep '^#RS requires' $NODE 
-	
+
 	# Node is run specific: wide over (all) samples
 	if [ "$TYPE" = 'widenode' ]
 	then {
-			echo Full width detected: ${SAMPLES[@]}
-			echo "|\ "WIDE
+			#echo Full width detected: ${SAMPLES[@]}
 			export SAMPLE=WIDE
 			export FILE_INPUT=`arrayGet INPUT ${SAMPLE}`
 			export FILE_OUTPUT=$DIR_OUTPUT/runwide/runwide
@@ -88,6 +97,7 @@ do
 			export FILE_LOG_ERR=$DIR_LOG/${NODENAME}.e${STAMP}
 			export FILE_LOG_OUT=$DIR_LOG/${NODENAME}.o${STAMP}
 			export JOB_NAME=RoStr_${SAMPLE}_${NODENAME}
+			echo "+ Wide"
 			submit
 			JOBID=$RANDOM
 			declare "JOBIDS_${SAMPLE}_${NODENAME}=${JOBID}"
@@ -96,7 +106,6 @@ do
 	else {
 		for SAMPLE in ${SAMPLES[@]}
 		do
-			echo "|\ "$SAMPLE
 			export SAMPLE=$SAMPLE
 			export FILE_INPUT=`arrayGet INPUT $SAMPLE`
 			export FILE_OUTPUT=$DIR_OUTPUT/$SAMPLE/$SAMPLE
@@ -107,11 +116,12 @@ do
 			export SUBARGS=""
 			if needsRun;
 			then
-				echo "LETS DO THIS!"
+				echo "+ $SAMPLE"
 				submit
 				declare "JOBIDS_${SAMPLE}_${NODENAME}=${JOBID}"
+			else
+				echo "- $SAMPLE"
 			fi
-			#echo "| \ "Job added as `arrayGet JOBIDS_${SAMPLE} ${NODENAME}`
 		done
 	} fi
 done

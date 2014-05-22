@@ -95,33 +95,51 @@ then {
 	PIPELINE=${REDUCEDPIPE[@]}
 } fi
 
+NEEDS_RUN_DATE=`date +%y%m%d_%H%M%S`
 # Additionally check if step is necessary for this sample at this moment, could skip if output exists and is newer than inputs and NODE.sh
 needsRun() {
 	NODEDATE=`date -r $NODE +%s`
 	OUTDATE=-2
 	INDATE=-1
+	CONFDATE=`date -r $FILE_CONFIG +%s`
 	for PRO in ${PROS[@]}
 	do
 		if [ -f $FILE_OUTPUT.$PRO ]
 		then
 			OUTDATE=`date -r $FILE_OUTPUT.$PRO +%s`
+			#if (( $OUTDATE < $CONFDATE ))
+			#then
+			#	rm $FILE_OUTPUT.$PRO
+			#	return 0
+			#fi
+			# If the step (node) was recently updated replace output
+			if (( $OUTDATE < $NODEDATE ))
+			then
+				#rm $FILE_OUTPUT.$PRO
+				mv $FILE_OUTPUT.$PRO.pre$NEEDS_RUN_DATE
+				return 0
+			fi
 			for REQ in ${REQS[@]}
 			do
+				# Req file does not exist, removed or never there
+				if [[ ! -f $FILE_OUTPUT.$REQ ]]
+				then 
+					return 0 
+				fi
+				# If the req file is newer than the pro file, redo
 				INDATE=`date -r $FILE_OUTPUT.$REQ +%s`
 				if (( $OUTDATE < $INDATE ))
 				then
-					rm $FILE_OUTPUT.$PRO
+					#rm $FILE_OUTPUT.$PRO
+					mv $FILE_OUTPUT.$PRO.pre$NEEDS_RUN_DATE
 					return 0
 				fi
 			done
-			if (( $OUTDATE < $NODEDATE ))
-			then
-				rm $FILE_OUTPUT.$PRO
-				return 0
-			fi
 		else
+			# If file simply doesn't exist
 			return 0
 		fi
 	done
+	# Nothing to do here
 	return 1
 }
