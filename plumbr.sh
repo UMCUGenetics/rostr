@@ -2,9 +2,16 @@
 for NODENAME in ${PIPELINE[@]}
 do {
 	NODE=$DIR_NODES/$NODENAME.sh
-	REQS=(`grep '#RS requires' $NODE | cut -d\  -f3-`)
-	PROS=(`grep '#RS provides' $NODE | cut -d\  -f3-`)
-	TYPE=(`grep '#RS widenode' $NODE | cut -d\  -f2-`)
+	
+	if [[ ! -f $NODE ]]
+	then
+		echo ERROR: $NODE not found
+		exit
+	fi
+	
+	REQS=(`grep '^#RS requires' $NODE | cut -d\  -f3-`)
+	PROS=(`grep '^#RS provides' $NODE | cut -d\  -f3-`)
+	TYPE=(`grep '^#RS widenode' $NODE | cut -d\  -f2-`)
 	
 	if [ "$TYPE" = 'widenode' ]
 	then
@@ -47,7 +54,7 @@ traceReq(){
 	do
 		IGNORETRACE=0
 		# If provided by conf (i.e. prev broken run) don't bother
-		for INNAME in ${WANTEDIN[@]}
+		for INNAME in ${PIPE_WANTEDIN[@]}
 		do
 			if [ "$TRACE" == "$INNAME" ]
 			then
@@ -65,10 +72,10 @@ traceReq(){
 }
 
 # Check for wanted outputs and only keep required nodes to reach our goals
-if [ ! "$WANTEDOUT" == "" ]
+if [ ! "$PIPE_WANTEDOUT" == "" ]
 then {
 	PLUNGED=()
-	for OUTNAME in ${WANTEDOUT[@]}
+	for OUTNAME in ${PIPE_WANTEDOUT[@]}
 	do
 		NODENAME=`arrayGet PROVIDES $OUTNAME`
 		PLUNGED+=($NODENAME)
@@ -101,22 +108,15 @@ needsRun() {
 	NODEDATE=`date -r $NODE +%s`
 	OUTDATE=-2
 	INDATE=-1
-	CONFDATE=`date -r $FILE_CONFIG +%s`
 	for PRO in ${PROS[@]}
 	do
 		if [ -f $FILE_OUTPUT.$PRO ]
 		then
 			OUTDATE=`date -r $FILE_OUTPUT.$PRO +%s`
-			#if (( $OUTDATE < $CONFDATE ))
-			#then
-			#	rm $FILE_OUTPUT.$PRO
-			#	return 0
-			#fi
-			# If the step (node) was recently updated replace output
 			if (( $OUTDATE < $NODEDATE ))
 			then
 				#rm $FILE_OUTPUT.$PRO
-				mv $FILE_OUTPUT.$PRO.pre$NEEDS_RUN_DATE
+				mv $FILE_OUTPUT.$PRO $FILE_OUTPUT.$PRO.pre$NEEDS_RUN_DATE
 				return 0
 			fi
 			for REQ in ${REQS[@]}
@@ -131,7 +131,7 @@ needsRun() {
 				if (( $OUTDATE < $INDATE ))
 				then
 					#rm $FILE_OUTPUT.$PRO
-					mv $FILE_OUTPUT.$PRO.pre$NEEDS_RUN_DATE
+					mv $FILE_OUTPUT.$PRO $FILE_OUTPUT.$PRO.pre$NEEDS_RUN_DATE
 					return 0
 				fi
 			done
