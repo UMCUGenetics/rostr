@@ -42,17 +42,23 @@ source $DIR_BASE/propr.sh
 # Load main config file
 #FILE_CONFIG=$3
 #source $FILE_CONFIG
+STAMP=`date +%s`
 
 # Load additional config files and set variables
+ROSTRLOG=~/rostr.$STAMP.conf
+echo \#"${@}" > $ROSTRLOG
+#mv $ROSTRLOG $ROSTRLOG.old
 for ADDITIONAL_ARG in "${@:3:$#}"
 do {
 	if [[ -f $ADDITIONAL_ARG ]]
 	then
 		echo Loading: $ADDITIONAL_ARG
 		source $ADDITIONAL_ARG
+		cat "$ADDITIONAL_ARG">>$ROSTRLOG
 	else
 		echo Declaring: $ADDITIONAL_ARG
 		declare $ADDITIONAL_ARG
+		echo "$ADDITIONAL_ARG">>$ROSTRLOG
 	fi
 } done
 
@@ -64,7 +70,6 @@ fi
 
 # On to preparing for the run
 source $DIR_BASE/submit/$SCHEDULER.sh
-STAMP=`date +%s`
 WIDENODES=()
 
 # Find our samples and extract their names
@@ -94,6 +99,7 @@ do
 done
 export DIR_OUTPUT=$(readlink -f $DIR_OUTPUT)
 set -e
+mv $ROSTRLOG $DIR_OUTPUT
 
 # Call the plumber to check for defects and shortcuts in our pipeline
 source plumbr.sh
