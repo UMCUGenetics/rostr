@@ -23,7 +23,7 @@ getNodeThreads() {
 		AVAL=`echo $ARG | cut -d ':' -f2`
 		if [ $ANAME = "cpu" ]
 		then
-			echo "$AVAL"
+			echo $(($AVAL<$ARG_JOB_CPU_MAX?$AVAL:$ARG_JOB_CPU_MAX))
 			return 0
 		fi
 	done
@@ -102,7 +102,7 @@ set -e
 mv $ROSTRLOG $DIR_OUTPUT
 
 # Call the plumber to check for defects and shortcuts in our pipeline
-source plumbr.sh
+source $DIR_BASE/plumbr.sh
 
 # Prepare scheduler
 preSubmit
@@ -118,11 +118,12 @@ submitNode() {
 	export JOB_NAME=RoStr_${SAMPLE}_${NODENAME}
 	export SUBARGS=$ARG_SUBBASE
 	export ARG_JOB_CPU=$(getNodeThreads)
+
 	if needsRun;
 	then
 		echo "+ $SAMPLE"
 		submit
-		declare "JOBIDS_${SAMPLE}_${NODENAME}=${JOBID}"
+		export declare "JOBIDS_${SAMPLE}_${NODENAME}=${JOBID}"
 	else
 		echo "- $SAMPLE"
 	fi

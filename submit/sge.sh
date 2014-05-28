@@ -6,7 +6,7 @@ submit() {
 		AVAL=`echo $ARG | cut -d ':' -f2`
 		if [ $ANAME = "cpu" ]
 		then
-			SUBARGS="$SUBARGS -pe $SGE_PE $AVAL"
+			SUBARGS="$SUBARGS -pe $SGE_PE $(($AVAL<$ARG_JOB_CPU_MAX?$AVAL:$ARG_JOB_CPU_MAX))"
 		fi
 	done
 

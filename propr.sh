@@ -49,7 +49,7 @@ getHoldIds() {
 				else
 					HOLDFOR+=(`arrayGet JOBIDS_${SAMPLE} ${REQNODE}`)
 					HOLDID=`arrayGet JOBIDS_${SAMPLE} ${REQNODE}`
-					HOLDFOR="$HOLDFOR};$HOLDID"
+					HOLDFOR="$HOLDFOR;$HOLDID"
 				fi
 			fi
 		done
@@ -63,3 +63,4 @@ SCHEDULER='dry'
 SGE_PE='singlenode'
 DIR_NODES=$DIR_BASE/nodes
 ARG_SUBBASE=""
+ARG_JOB_CPU_MAX=99999
