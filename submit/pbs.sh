@@ -8,6 +8,11 @@ submit() {
 		then
 			SUBARGS="$SUBARGS -l nodes=1:ppn=$(($AVAL<$ARG_JOB_CPU_MAX?$AVAL:$ARG_JOB_CPU_MAX))"
 		fi
+		
+		if [ $ANAME = "array" ]
+		then
+			SUBARGS="$SUBARGS -J ${AVAL//,/:}"
+		fi
 	done
 
 	# Obtain hold ids, replace splitting tag by actual arguments
