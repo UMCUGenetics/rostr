@@ -61,6 +61,6 @@ getHoldIds() {
 # Stub values to work with
 SCHEDULER='dry'
 SGE_PE='singlenode'
-DIR_NODES=$DIR_BASE/nodes
+DIR_NODES=$DIR_BASE/pipelines/
 ARG_SUBBASE=""
 ARG_JOB_CPU_MAX=99999
