@@ -31,5 +31,5 @@ submit() {
 		$ADDS`
 	
 	# Fix the JobID
-	JOBID=`echo $JOBID | cut -d\  -f3`
+	JOBID=`echo $JOBID | cut -d\  -f3 | cut -d. -f1`
 }

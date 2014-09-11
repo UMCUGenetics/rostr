@@ -33,7 +33,8 @@ getHoldIds() {
 			# If REQNODE is wide, add this widenode to hold list
 			if [ `arrayGet WIDENODES ${REQNODE}` ]
 			then
-				HOLDID=`arrayGet JOBIDS_WIDE ${REQNODE}`
+				#HOLDFOR+=(`arrayGet JOBIDS_WIDE ${REQNODE}`)
+				HOLDID=`arrayGet JOBIDS_wide ${REQNODE}`
 				HOLDFOR="$HOLDFOR;$HOLDID"
 			# If REQNODE is not wide
 			else
@@ -42,6 +43,7 @@ getHoldIds() {
 				then
 					for DEPSAMPLE in ${SAMPLES[@]}
 					do
+						#HOLDFOR+=(`arrayGet JOBIDS_${DEPSAMPLE} ${REQNODE}`)
 						HOLDID=`arrayGet JOBIDS_${DEPSAMPLE} ${REQNODE}`
 						HOLDFOR="$HOLDFOR;$HOLDID"
 					done

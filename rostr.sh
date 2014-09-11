@@ -85,11 +85,15 @@ do {
 	declare "INPUT_${SAMPLE}=${SAMPLEFULLPATH}"
 } done
 echo "Using samples:" ${SAMPLES[@]}
+
+# Bash can't export arrays, just export another variable with the array info
+export SAMPLELIST=${SAMPLES[@]}
+
 # Let's fix the folders
 DIR_OUTPUT=$2
 set +e
 mkdir $DIR_OUTPUT
-mkdir $DIR_OUTPUT/log
+#mkdir $DIR_OUTPUT/log
 mkdir $DIR_OUTPUT/wide
 mkdir $DIR_OUTPUT/wide/log
 for SAMPLE in ${SAMPLES[@]}
