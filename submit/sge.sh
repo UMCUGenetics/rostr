@@ -1,5 +1,6 @@
 # Sun Grid Engine translator
 submit() {
+    echo ${ARGS[@]}
 	for ARG in ${ARGS[@]}
 	do
 		ANAME=`echo $ARG | cut -d ':' -f1`

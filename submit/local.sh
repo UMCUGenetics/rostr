@@ -1,6 +1,7 @@
 # Local translator
 # Do the actual work
 submitForReal() {
+    echo $ARG_TASKID
 	source $NODE
 	JOBID="N/A: Local run"
 }
@@ -22,7 +23,7 @@ submit() {
 			ARR_STEP=`echo $AVAL | cut -d ',' -f2`
 		fi
 	done
-	
+	    
 	for SEQ_ITER in $(seq $ARR_START $ARR_STEP $ARR_END)
 	do
 		export ARG_TASKID=$SEQ_ITER

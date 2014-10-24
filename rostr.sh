@@ -4,15 +4,24 @@ set -e
 # Hack to get around the hashmap versus dot fight in bash
 replaceDots() {
 	INSTRING=$1
-	echo ${INSTRING//\./___DOT___}
+	INSTRING=${INSTRING//\./___DOT___}
+	echo ${INSTRING//\-/___HYPHEN___}
 }
 
 # Get value from map by key:
 arrayGet() { 
 	local ARRAY=$1 INDEX=$2
 	INDEX=`replaceDots $INDEX` # Hacky-hacky-hacky-hoo
-	local i="${ARRAY}_$INDEX"
-	printf '%s' "${!i}"
+    local i="${ARRAY}_$INDEX"
+    subst="$i[@]"
+    echo "${!subst}"
+	#printf '%s' "${!i}"
+}
+
+containsElement () {
+  local e
+  for e in "${@:2}"; do [[ "$e" == "$1" ]] && return 0; done
+  return 1
 }
 
 # Experimental: CPU count per job with only one mention
@@ -79,12 +88,22 @@ SAMPLES=()
 for SAMPLEPATH in ${SAMPLEPATHS[@]}
 do {
 	SAMPLE=`getSampleName $SAMPLEPATH`
-	SAMPLES+=($SAMPLE)
-	SAMPLEFULLPATH=$( readlink -f $SAMPLEPATH )
+    SAMPLE=`replaceDots $SAMPLE`
+    if containsElement $SAMPLE "${SAMPLES[@]}"
+    then
+        echo $SAMPLE multiple files found
+	else
+        SAMPLES+=($SAMPLE)
+    fi
+    SAMPLEFULLPATH=$( readlink -f $SAMPLEPATH )
 	#FILE_SAMPLES+=($SAMPLEFULLPATH)
-	declare "INPUT_${SAMPLE}=${SAMPLEFULLPATH}"
+	declare "INPUT_${SAMPLE}=${SAMPLEFULLPATH} `arrayGet INPUT $SAMPLE`"
 } done
+
 echo "Using samples:" ${SAMPLES[@]}
+
+TEST=`arrayGet INPUT s2`
+echo ${TEST[@]//R1/R2}
 
 # Bash can't export arrays, just export another variable with the array info
 export SAMPLELIST=${SAMPLES[@]}
