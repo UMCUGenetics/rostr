@@ -12,7 +12,9 @@ arrayGet() {
 	local ARRAY=$1 INDEX=$2
 	INDEX=`replaceDots $INDEX` # Hacky-hacky-hacky-hoo
 	local i="${ARRAY}_$INDEX"
-	printf '%s' "${!i}"
+	subst="$i[@]"
+	echo "${!subst}"
+	#printf '%s' "${!i}"
 }
 
 # Experimental: CPU count per job with only one mention
@@ -46,7 +48,13 @@ STAMP=`date +%s`
 
 # Load additional config files and set variables
 ROSTRLOG=~/rostr.$STAMP.conf
-echo \#"${@}" > $ROSTRLOG
+LOG_VER=$(svn info $DIR_BASE/pipelines | grep URL | rev | cut -d '/' -f 1 | rev)
+LOG_REV=$(svn info $DIR_BASE/pipelines | grep 'Last Changed Rev:' | awk '{ print $4 }')
+echo '# RoDa '$LOG_VER' r'$LOG_REV >> $ROSTRLOG
+echo '# RoStr ' $( git log --oneline | head -n 1 ) >> $ROSTRLOG
+echo '# Run date: '$(date +"%d/%m/%y")' '$(date +"%T") >> $ROSTRLOG
+echo '' >> $ROSTRLOG
+echo \#"${@}" >> $ROSTRLOG
 #mv $ROSTRLOG $ROSTRLOG.old
 for ADDITIONAL_ARG in "${@:3:$#}"
 do {
@@ -73,6 +81,7 @@ source $DIR_BASE/submit/$SCHEDULER.sh
 WIDENODES=()
 
 # Find our samples and extract their names
+DIR_INPUT=$1
 SAMPLEPATHS=`find $1 -name $INPUTEXT`
 SAMPLES=()
 #export FILE_SAMPLES=()
@@ -100,10 +109,17 @@ for SAMPLE in ${SAMPLES[@]}
 do
 	mkdir $DIR_OUTPUT/$SAMPLE
 	mkdir $DIR_OUTPUT/$SAMPLE/log
+	NAME_MULTISAMPLE="${NAME_MULTISAMPLE}_${SAMPLE}"
 done
 export DIR_OUTPUT=$(readlink -f $DIR_OUTPUT)
 set -e
 mv $ROSTRLOG $DIR_OUTPUT
+
+if [[ ! -z $NAME_MULTISAMPLE ]]; then
+	export NAME_MULTISAMPLE=${NAME_MULTISAMPLE}
+else
+	export NAME_MULTISAMPLE="_MULT"
+fi
 
 # Call the plumber to check for defects and shortcuts in our pipeline
 source $DIR_BASE/plumbr.sh
@@ -115,6 +131,7 @@ preSubmit
 submitNode() {
 	export SAMPLE=$SAMPLE
 	export FILE_INPUT=`arrayGet INPUT $SAMPLE`
+	export DIR_INPUT=$DIR_INPUT
 	export FILE_OUTPUT=$DIR_OUTPUT/$SAMPLE/$SAMPLE
 	export DIR_LOG=$DIR_OUTPUT/$SAMPLE/log
 	export FILE_LOG_ERR=$DIR_LOG/${NODENAME}.e${STAMP}
