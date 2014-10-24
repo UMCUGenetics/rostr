@@ -55,7 +55,13 @@ STAMP=`date +%s`
 
 # Load additional config files and set variables
 ROSTRLOG=~/rostr.$STAMP.conf
-echo \#"${@}" > $ROSTRLOG
+LOG_VER=$(svn info $DIR_BASE/pipelines | grep URL | rev | cut -d '/' -f 1 | rev)
+LOG_REV=$(svn info $DIR_BASE/pipelines | grep 'Last Changed Rev:' | awk '{ print $4 }')
+echo '# RoDa '$LOG_VER' r'$LOG_REV >> $ROSTRLOG
+echo '# RoStr ' $( git log --oneline | head -n 1 ) >> $ROSTRLOG
+echo '# Run date: '$(date +"%d/%m/%y")' '$(date +"%T") >> $ROSTRLOG
+echo '' >> $ROSTRLOG
+echo \#"${@}" >> $ROSTRLOG
 #mv $ROSTRLOG $ROSTRLOG.old
 for ADDITIONAL_ARG in "${@:3:$#}"
 do {
