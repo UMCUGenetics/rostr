@@ -55,6 +55,7 @@ STAMP=`date +%s`
 
 # Load additional config files and set variables
 ROSTRLOG=~/rostr.$STAMP.conf
+source /illumina/share/enhance/paths
 LOG_VER=$(svn info $DIR_BASE/pipelines | grep URL | rev | cut -d '/' -f 1 | rev)
 LOG_REV=$(svn info $DIR_BASE/pipelines | grep 'Last Changed Rev:' | awk '{ print $4 }')
 echo '# RoDa '$LOG_VER' r'$LOG_REV >> $ROSTRLOG
@@ -115,6 +116,7 @@ echo ${TEST[@]//R1/R2}
 export SAMPLELIST=${SAMPLES[@]}
 
 # Let's fix the folders
+DIR_INPUT=$1
 DIR_OUTPUT=$2
 set +e
 mkdir $DIR_OUTPUT
@@ -125,10 +127,17 @@ for SAMPLE in ${SAMPLES[@]}
 do
 	mkdir $DIR_OUTPUT/$SAMPLE
 	mkdir $DIR_OUTPUT/$SAMPLE/log
+	NAME_MULTISAMPLE="${NAME_MULTISAMPLE}_${SAMPLE}"
 done
 export DIR_OUTPUT=$(readlink -f $DIR_OUTPUT)
 set -e
 mv $ROSTRLOG $DIR_OUTPUT
+
+if [[ ! -z $NAME_MULTISAMPLE ]]; then
+	export NAME_MULTISAMPLE=${NAME_MULTISAMPLE}
+else
+	export NAME_MULTISAMPLE="_MULT"
+fi
 
 # Call the plumber to check for defects and shortcuts in our pipeline
 source $DIR_BASE/plumbr.sh
@@ -140,6 +149,7 @@ preSubmit
 submitNode() {
 	export SAMPLE=$SAMPLE
 	export FILE_INPUT=`arrayGet INPUT $SAMPLE`
+	export DIR_INPUT=$DIR_INPUT
 	export FILE_OUTPUT=$DIR_OUTPUT/$SAMPLE/$SAMPLE
 	export DIR_LOG=$DIR_OUTPUT/$SAMPLE/log
 	export FILE_LOG_ERR=$DIR_LOG/${NODENAME}.e${STAMP}
