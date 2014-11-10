@@ -55,7 +55,9 @@ STAMP=`date +%s`
 
 # Load additional config files and set variables
 ROSTRLOG=~/rostr.$STAMP.conf
-source /illumina/share/enhance/paths
+if [ -f /illumina/share/enhance/paths ]; then
+	source /illumina/share/enhance/paths
+fi
 LOG_VER=$(svn info $DIR_BASE/pipelines | grep URL | rev | cut -d '/' -f 1 | rev)
 LOG_REV=$(svn info $DIR_BASE/pipelines | grep 'Last Changed Rev:' | awk '{ print $4 }')
 echo '# RoDa '$LOG_VER' r'$LOG_REV >> $ROSTRLOG
