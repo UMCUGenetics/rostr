@@ -15,8 +15,12 @@ submit() {
 			ARR_END=`echo $AVAL | cut -d '-' -f2 | cut -d ',' -f1`
 			ARR_STEP=`echo $AVAL | cut -d ',' -f2`
 			
-			SUBARGS="$SUBARGS -t $(seq -s, $ARR_START $ARR_STEP $ARR_END)"
-			# SUBARGS="$SUBARGS -t ${AVAL//,/:}"
+			if [ $ARR_STEP = "1" ]
+			then
+				SUBARGS="$SUBARGS -t ${ARR_START}-${ARR_END}"
+			else
+				SUBARGS="$SUBARGS -t $(seq -s, $ARR_START $ARR_STEP $ARR_END)"
+			fi
 		fi
 	done
 
