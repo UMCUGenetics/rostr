@@ -28,10 +28,39 @@ submit() {
 	HOLDFOR=""
 	if [ ${#REQS} -ne "0" ]
 	then
-		HOLDFOR=`getHoldIds`
-		HOLDFOR=${HOLDFOR//;/:}
-		HOLDFOR="-W depend=afterok$HOLDFOR"
+		HOLDFORIDS=`getHoldIds`
+		#HOLDFOR=${HOLDFOR//;/:}
+		#HOLDFOR="-W depend=afterok$HOLDFOR"
+		
+		
+		HOLDFOR_ARRAY=""
+		HOLDFOR_SINGLE=""
+		IFS=';' read -a HOLDFOR_ARR <<< "$HOLDFORIDS"
+		for HOLDJOB in ${HOLDFOR_ARR[@]}
+		do
+			TEMPVAL=`echo $HOLDJOB|cut -d "." -f1`
+			if [ ${TEMPVAL: -2} = '[]' ]; 
+			then
+				HOLDFOR_ARRAY="$HOLDFOR_ARRAY:$HOLDJOB"
+			else
+				HOLDFOR_SINGLE="$HOLDFOR_SINGLE:$HOLDJOB"
+			fi
+		done
+		
+		if [ ! $HOLDFOR_SINGLE = "" ]
+		then
+			HOLDFOR="$HOLDFOR -W depend=afterok$HOLDFOR_SINGLE"
+		fi
+
+		if [ ! $HOLDFOR_ARRAY = "" ]
+		then
+			HOLDFOR="$HOLDFOR -W depend=afterokarray$HOLDFOR_ARRAY"
+		fi
+		
 	fi
+	
+	
+
 	
 	# Submit to Torque
 	JOBID=`qsub \
