@@ -135,11 +135,12 @@ export DIR_OUTPUT=$(readlink -f $DIR_OUTPUT)
 set -e
 mv $ROSTRLOG $DIR_OUTPUT
 
-if [[ ! -z $NAME_MULTISAMPLE ]]; then
+if [[ ! -z $NAME_MULTISAMPLE ]] && [[ ${#NAME_MULTISAMPLE} -lt 150 ]]; then
 	export NAME_MULTISAMPLE=${NAME_MULTISAMPLE}
 else
 	export NAME_MULTISAMPLE="_MULT"
 fi
+echo 'Multisample file name used: ' $NAME_MULTISAMPLE
 
 # Call the plumber to check for defects and shortcuts in our pipeline
 source $DIR_BASE/plumbr.sh
