@@ -55,10 +55,27 @@ STAMP=`date +%s`
 
 # Load additional config files and set variables
 ROSTRLOG=~/rostr.$STAMP.conf
-LOG_VER=$(svn info $DIR_BASE/pipelines | grep URL | rev | cut -d '/' -f 1 | rev)
-LOG_REV=$(svn info $DIR_BASE/pipelines | grep 'Last Changed Rev:' | awk '{ print $4 }')
-echo '# RoDa '$LOG_VER' r'$LOG_REV >> $ROSTRLOG
-echo '# RoStr ' $( git log --oneline | head -n 1 ) >> $ROSTRLOG
+
+LOG_REV=$(git --git-dir $DIR_BASE/pipelines/.git/ log --oneline | head -n 1 | tr -s ' ' | cut -d ' ' -f 1 )
+LOG_VERTMP=`grep -Po "No tags" <<< $(git $DIR_BASE/pipelines/.git/ describe --tags 2>&1)`
+if [ -z "$LOG_VERTMP" ]; then
+	LOG_VER=$(git --git-dir $DIR_BASE/pipelines/.git/ describe --tags)
+else
+	LOG_VER="devel"
+fi
+echo '# RoDa '$LOG_VER'-'$LOG_REV >> $ROSTRLOG
+export RODA_VERSION=$LOG_VER'-'$LOG_REV
+
+LOG_RREV=$(git log --oneline | head -n 1 | tr -s ' ' | cut -d ' ' -f 1 )
+LOG_RVERTMP=`grep -Po "No tags" <<< $(git describe --tags 2>&1)`
+if [ -z "$LOG_VERTMP" ]; then
+	LOG_RVER=$(git describe --tags)
+else
+	LOG_RVER="devel"
+fi
+echo '# RoStr '$LOG_RVER'-'$LOG_RREV >> $ROSTRLOG
+export ROSTR_VERSION=$LOG_RVER'-'$LOG_RREV
+
 echo '# Run date: '$(date +"%d/%m/%y")' '$(date +"%T") >> $ROSTRLOG
 echo '' >> $ROSTRLOG
 echo \#"${@}" >> $ROSTRLOG
