@@ -56,25 +56,8 @@ STAMP=`date +%s`
 # Load additional config files and set variables
 ROSTRLOG=~/rostr.$STAMP.conf
 
-LOG_REV=$(git --git-dir $DIR_BASE/pipelines/.git/ log --oneline | head -n 1 | tr -s ' ' | cut -d ' ' -f 1 )
-LOG_VERTMP=`grep -Po "No tags" <<< $(git $DIR_BASE/pipelines/.git/ describe --tags 2>&1)`
-if [ -z "$LOG_VERTMP" ]; then
-	LOG_VER=$(git --git-dir $DIR_BASE/pipelines/.git/ describe --tags)
-else
-	LOG_VER="devel"
-fi
-echo '# RoDa '$LOG_VER'-'$LOG_REV >> $ROSTRLOG
-export RODA_VERSION=$LOG_VER'-'$LOG_REV
-
-LOG_RREV=$(git log --oneline | head -n 1 | tr -s ' ' | cut -d ' ' -f 1 )
-LOG_RVERTMP=`grep -Po "No tags" <<< $(git describe --tags 2>&1)`
-if [ -z "$LOG_VERTMP" ]; then
-	LOG_RVER=$(git describe --tags)
-else
-	LOG_RVER="devel"
-fi
-echo '# RoStr '$LOG_RVER'-'$LOG_RREV >> $ROSTRLOG
-export ROSTR_VERSION=$LOG_RVER'-'$LOG_RREV
+export RODA_VERSION=$(git --git-dir $DIR_BASE/pipelines/.git/ describe --tag --always)
+export ROSTR_VERSION=$(git describe --tag --always)
 
 echo '# Run date: '$(date +"%d/%m/%y")' '$(date +"%T") >> $ROSTRLOG
 echo '' >> $ROSTRLOG
