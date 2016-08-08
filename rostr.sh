@@ -58,7 +58,8 @@ ROSTRLOG=~/rostr.$STAMP.conf
 
 export RODA_VERSION=$(git --git-dir $DIR_BASE/pipelines/.git/ describe --tag --always)
 export ROSTR_VERSION=$(git describe --tag --always)
-
+echo '# RoDa '$RODA_VERSION >> $ROSTRLOG
+echo '# RoStr '$ROSTR_VERSION >> $ROSTRLOG
 echo '# Run date: '$(date +"%d/%m/%y")' '$(date +"%T") >> $ROSTRLOG
 echo '' >> $ROSTRLOG
 echo \#"${@}" >> $ROSTRLOG
