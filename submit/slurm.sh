@@ -25,7 +25,7 @@ submit() {
 		HOLDFOR="-d ${HOLDFOR/,/}"
 	fi
 
-	# Submit to SGE
+	# Submit to SLURM
 	JOBID=`sbatch \
 		$HOLDFOR \
 		-J $JOB_NAME \

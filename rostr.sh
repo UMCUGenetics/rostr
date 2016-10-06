@@ -5,7 +5,8 @@ set -e
 replaceDots() {
 	INSTRING=$1
 	INSTRING=${INSTRING//\./___DOT___}
-	echo ${INSTRING//\-/___HYPHEN___}
+	#echo ${INSTRING//\-/___HYPHEN___}
+	echo ${INSTRING//\-/_}
 }
 
 # Get value from map by key:
@@ -127,16 +128,16 @@ for SAMPLE in ${SAMPLES[@]}
 do
 	mkdir $DIR_OUTPUT/$SAMPLE
 	mkdir $DIR_OUTPUT/$SAMPLE/log
-	NAME_MULTISAMPLE="${NAME_MULTISAMPLE}_${SAMPLE}"
+	NAME_MULTISAMPLE="${NAME_MULTISAMPLE}-${SAMPLE}"
 done
 export DIR_OUTPUT=$(readlink -f $DIR_OUTPUT)
 set -e
 mv $ROSTRLOG $DIR_OUTPUT
 
-if [[ ! -z $NAME_MULTISAMPLE ]] && [[ ${#NAME_MULTISAMPLE} -lt 150 ]]; then
+if [[ ! -z $NAME_MULTISAMPLE ]] && [[ ${#NAME_MULTISAMPLE} -lt 50 ]]; then
 	export NAME_MULTISAMPLE=${NAME_MULTISAMPLE}
 else
-	export NAME_MULTISAMPLE="_MULT"
+	export NAME_MULTISAMPLE="-MULT"
 fi
 echo 'Multisample file name used: ' $NAME_MULTISAMPLE
 
