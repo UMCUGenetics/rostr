@@ -9,7 +9,7 @@ submit() {
 		then
 			SUBARGS="$SUBARGS -c $(($AVAL<$ARG_JOB_CPU_MAX?$AVAL:$ARG_JOB_CPU_MAX))"
 		fi
-		
+
 		if [ $ANAME = "array" ]
 		then
 			SUBARGS="$SUBARGS -a ${AVAL//,/:}"
@@ -27,6 +27,7 @@ submit() {
 
 	# Submit to SLURM
 	JOBID=`sbatch \
+        --partition ${QUEUE} \
 		$HOLDFOR \
 		-J $JOB_NAME \
 		-e $FILE_LOG_ERR \
@@ -34,7 +35,7 @@ submit() {
 		$SUBARGS \
 		$NODE \
 		$ADDS`
-	
+
 	# Fix the JobID
 	JOBID=`echo $JOBID | cut -d\  -f4`
 }
