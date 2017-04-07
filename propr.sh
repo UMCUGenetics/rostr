@@ -56,12 +56,13 @@ getHoldIds() {
 			fi
 		done
 	fi
-	
+
 	echo $HOLDFOR
 }
 
 # Stub values to work with
 SCHEDULER='dry'
+QUEUE='defq'
 SGE_PE='singlenode'
 DIR_NODES=$DIR_BASE/pipelines/
 ARG_SUBBASE=""
