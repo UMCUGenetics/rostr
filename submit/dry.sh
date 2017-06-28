@@ -6,6 +6,12 @@ preSubmit() {
 
 submit() {
 	echo "> > Runs:" $NODE
+
+	for ARG in ${ARGS[@]}
+	do
+    	echo $ARG
+	done
+
 	USEDVARIABLES=(`grep -o '\$[a-zA-Z0-9_]*' $NODE | sort | uniq`)
 	for USEDVAR in ${USEDVARIABLES[@]}
 	do

@@ -4,7 +4,7 @@ submit() {
 	do
 		ANAME=`echo $ARG | cut -d ':' -f1`
 		AVAL=`echo $ARG | cut -d ':' -f2`
-		if [ $ANAME = "cpu" ]
+		if [ $ANAME = "cores" ]
 		then
 			SUBARGS="$SUBARGS -l nodes=1:ppn=$(($AVAL<$ARG_JOB_CPU_MAX?$AVAL:$ARG_JOB_CPU_MAX))"
 		fi

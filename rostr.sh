@@ -71,10 +71,12 @@ do {
 	then
 		echo Loading: $ADDITIONAL_ARG
 		source $ADDITIONAL_ARG
+		echo -e "\n\n\n### Loading: $ADDITIONAL_ARG ###">>$ROSTRLOG
 		cat "$ADDITIONAL_ARG">>$ROSTRLOG
 	else
 		echo Declaring: $ADDITIONAL_ARG
 		declare $ADDITIONAL_ARG
+		echo -e "\n\n\n### Declaring: $ADDITIONAL_ARG ###">>$ROSTRLOG
 		echo "$ADDITIONAL_ARG">>$ROSTRLOG
 	fi
 } done
@@ -86,11 +88,10 @@ then
 fi
 
 # On to preparing for the run
-source $DIR_BASE/submit/$SCHEDULER.sh
 WIDENODES=()
 
 # Find our samples and extract their names
-SAMPLEPATHS=`find $1 -name $INPUTEXT`
+SAMPLEPATHS=`find $1 -name $TEXT_INPUT`
 SAMPLES=()
 #export FILE_SAMPLES=()
 for SAMPLEPATH in ${SAMPLEPATHS[@]}
@@ -145,6 +146,7 @@ echo 'Multisample file name used: ' $NAME_MULTISAMPLE
 source $DIR_BASE/plumbr.sh
 
 # Prepare scheduler
+source $DIR_BASE/submit/$SCHEDULER.sh
 preSubmit
 
 # Simplification for RoStr submits
@@ -171,9 +173,11 @@ submitNode() {
 }
 
 # Work your way through the pipeline that is left
+export PIPELINE
 for NODENAME in ${PIPELINE[@]}
 do
 	echo -e "\nNode: $NODENAME"
+	export NODENAME
 	export NODE=$( readlink -f $DIR_NODES/$NODENAME.sh )
 	export REQS=(`grep '^#RS requires' $NODE | cut -d\  -f3-`)
 	export PROS=(`grep '^#RS provides' $NODE | cut -d\  -f3-`)
