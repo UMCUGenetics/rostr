@@ -41,7 +41,24 @@ submit() {
 		NODE_LABEL=${NODENAME}
 		#echo "${JOB_NAME} [style=filled]" >> $FILE_GRAPH
 	fi
+
+	# KNOWNVARS=""
+	# MISSINGVARS=""
+	# USEDVARIABLES=(`grep -o '\$[a-zA-Z0-9_]*' $NODE | sort | uniq`)
+	# for USEDVAR in ${USEDVARIABLES[@]}
+	# do
+	# 	VARNAME=`echo $USEDVAR | cut -b 1 --complement`
+	# 	VARVAL=`eval echo $USEDVAR`
+	# 	if [ ! "$VARVAL" = "" ]
+	# 	then
+	# 		KNOWNVARS="$KNOWNVARS\n$VARNAME=$VARVAL"
+	# 	else
+	# 		MISSINGVARS="$MISSINGVARS\n$VARNAME"
+	# 	fi
+	# done
+
 	# Stuff label into the graph text file
+	# echo "${JOB_NAME} [label=\"$NODE_LABEL\n\nSet Variables:$KNOWNVARS\n\nUnset Variables:$MISSINGVARS\"]" >> $FILE_GRAPH
 	echo "${JOB_NAME} [label=\"$NODE_LABEL\"]" >> $FILE_GRAPH
 	
 	#echo "${JOB_NAME}[label=\"Job: ${NODENAME}\nSample: ${SAMPLE//wide/all}\"]" >> $FILE_GRAPH
