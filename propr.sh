@@ -21,45 +21,6 @@ getSampleName() {
 	echo $1 | awk -F"/"  '{ print  $NF }' | cut -d. -f1 | cut -d\_ -f1
 }
 
-# A function I need over different submission scripts but I have no idea where to put atm
-# Implementation of partial wide should (partly) happen here as well
-getHoldIds() {
-	local HOLDFOR=""
-	if [ ${#REQS} -ne "0" ]
-	then
-		for REQ in ${REQS[@]}
-		do
-			REQNODE=`arrayGet PROVIDES $REQ`
-			# If REQNODE is wide, add this widenode to hold list
-			if [ `arrayGet WIDENODES ${REQNODE}` ]
-			then
-				#HOLDFOR+=(`arrayGet JOBIDS_WIDE ${REQNODE}`)
-				HOLDID=`arrayGet JOBIDS_wide ${REQNODE}`
-				HOLDFOR="$HOLDFOR;$HOLDID"
-			# If REQNODE is not wide
-			else
-				# Test if we are wide ourselves and add all preceding sample jobs if so
-				if [ `arrayGet WIDENODES ${NODENAME}` ]
-				then
-					for DEPSAMPLE in ${SAMPLES[@]}
-					do
-						#HOLDFOR+=(`arrayGet JOBIDS_${DEPSAMPLE} ${REQNODE}`)
-						HOLDID=`arrayGet JOBIDS_${DEPSAMPLE} ${REQNODE}`
-						HOLDFOR="$HOLDFOR;$HOLDID"
-					done
-				# And if we are not, just add one sample dependency
-				else
-					HOLDFOR+=(`arrayGet JOBIDS_${SAMPLE} ${REQNODE}`)
-					HOLDID=`arrayGet JOBIDS_${SAMPLE} ${REQNODE}`
-					HOLDFOR="$HOLDFOR;$HOLDID"
-				fi
-			fi
-		done
-	fi
-
-	echo $HOLDFOR
-}
-
 # Stub values to work with
 SCHEDULER='dry'
 QUEUE='defq'

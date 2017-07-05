@@ -1,64 +1,23 @@
 #!/bin/bash
 set -e
 
-# Hack to get around the hashmap versus dot fight in bash
-replaceDots() {
-	INSTRING=$1
-	INSTRING=${INSTRING//\./___DOT___}
-	#echo ${INSTRING//\-/___HYPHEN___}
-	echo ${INSTRING//\-/_}
-}
-
-# Get value from map by key:
-arrayGet() { 
-	local ARRAY=$1 INDEX=$2
-	INDEX=`replaceDots $INDEX` # Hacky-hacky-hacky-hoo
-    local i="${ARRAY}_$INDEX"
-    subst="$i[@]"
-    echo "${!subst}"
-	#printf '%s' "${!i}"
-}
-
-containsElement () {
-  local e
-  for e in "${@:2}"; do [[ "$e" == "$1" ]] && return 0; done
-  return 1
-}
-
-# Experimental: CPU count per job with only one mention
-getNodeThreads() {
-	for ARG in ${ARGS[@]}
-	do
-		ANAME=`echo $ARG | cut -d ':' -f1`
-		AVAL=`echo $ARG | cut -d ':' -f2`
-		if [ $ANAME = "cpu" ]
-		then
-			echo $(($AVAL<$ARG_JOB_CPU_MAX?$AVAL:$ARG_JOB_CPU_MAX))
-			return 0
-		fi
-	done
-	echo "1"
-	return 0
-}
-#export -f getNodeThreads
-
 # Determine script location and working location
 DIR_BASE=$(dirname $0) # Dir script resides in
 DIR_BASE=$(readlink -f $DIR_BASE) # Obtain the full path, otherwise nodes go crazy
 DIR_CUR=${PWD} # Dir script is called from
 
 # Load basic config files
+source $DIR_BASE/hackr.sh
 source $DIR_BASE/propr.sh
 # Load main config file
-#FILE_CONFIG=$3
-#source $FILE_CONFIG
 STAMP=`date +%s`
 
 # Load additional config files and set variables
 ROSTRLOG=~/rostr.$STAMP.conf
 
 export RODA_VERSION=$(git --git-dir $DIR_BASE/pipelines/.git/ describe --tag --always)
-export ROSTR_VERSION=$(git describe --tag --always)
+export ROSTR_VERSION=$(git --git-dir $DIR_BASE describe --tag --always)
+echo $ROSTR_VERSION
 echo '# RoDa '$RODA_VERSION >> $ROSTRLOG
 echo '# RoStr '$ROSTR_VERSION >> $ROSTRLOG
 echo '# Run date: '$(date +"%d/%m/%y")' '$(date +"%T") >> $ROSTRLOG
