@@ -3,6 +3,7 @@ FILE_GRAPH=$DIR_OUTPUT/graph.txt
 preSubmit() {
 	# Setup graph txt file
 	echo 'digraph {' > $FILE_GRAPH
+	echo 'rankdir="LR"' >> $FILE_GRAPH
 
 	# Make clusters to group nodes over all samples
 	for NODENAME in ${PIPELINE[@]}
