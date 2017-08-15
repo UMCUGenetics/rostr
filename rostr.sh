@@ -46,6 +46,8 @@ getNodeThreads() {
 DIR_BASE=$(dirname $0) # Dir script resides in
 DIR_BASE=$(readlink -f $DIR_BASE) # Obtain the full path, otherwise nodes go crazy
 DIR_CUR=${PWD} # Dir script is called from
+export FILE_SAMPLES=$(realpath $1)
+export DIR_OUTPUT=$(realpath $2)
 
 # Load basic config files
 source $DIR_BASE/propr.sh
@@ -55,11 +57,10 @@ source $DIR_BASE/propr.sh
 STAMP=`date +%s`
 
 # Load additional config files and set variables
-ROSTRLOG=~/rostr.$STAMP.conf
+ROSTRLOG=~/config-$STAMP
 
-export RODA_VERSION=$(git --git-dir $DIR_BASE/pipelines/.git/ describe --tag --always)
-export ROSTR_VERSION=$(git describe --tag --always)
-echo '# RoDa '$RODA_VERSION >> $ROSTRLOG
+export ROSTR_VERSION=$(git --git-dir $DIR_BASE/.git describe --tag --always)
+echo $ROSTR_VERSION
 echo '# RoStr '$ROSTR_VERSION >> $ROSTRLOG
 echo '# Run date: '$(date +"%d/%m/%y")' '$(date +"%T") >> $ROSTRLOG
 echo '' >> $ROSTRLOG
@@ -71,10 +72,17 @@ do {
 	then
 		echo Loading: $ADDITIONAL_ARG
 		source $ADDITIONAL_ARG
+		echo -e "\n\n\n### Loading: --git-dir $ADDITIONAL_ARG/.git ###" >> $ROSTRLOG
+
+		set +e
+			git --git-dir `pwd $ADDITIONAL_ARG` describe --tag --always >> $ROSTRLOG
+		set -e
+
 		cat "$ADDITIONAL_ARG">>$ROSTRLOG
 	else
 		echo Declaring: $ADDITIONAL_ARG
 		declare $ADDITIONAL_ARG
+		echo -e "\n\n\n### Declaring: $ADDITIONAL_ARG ###" >> $ROSTRLOG
 		echo "$ADDITIONAL_ARG">>$ROSTRLOG
 	fi
 } done
@@ -89,57 +97,22 @@ fi
 source $DIR_BASE/submit/$SCHEDULER.sh
 WIDENODES=()
 
-# Find our samples and extract their names
-SAMPLEPATHS=`find $1 -name $INPUTEXT`
-SAMPLES=()
-#export FILE_SAMPLES=()
-for SAMPLEPATH in ${SAMPLEPATHS[@]}
-do {
-	SAMPLE=`getSampleName $SAMPLEPATH`
-    SAMPLE=`replaceDots $SAMPLE`
-    if containsElement $SAMPLE "${SAMPLES[@]}"
-    then
-        echo $SAMPLE multiple files found
-	else
-        SAMPLES+=($SAMPLE)
-    fi
-    SAMPLEFULLPATH=$( readlink -f $SAMPLEPATH )
-	#FILE_SAMPLES+=($SAMPLEFULLPATH)
-	declare "INPUT_${SAMPLE}=${SAMPLEFULLPATH} `arrayGet INPUT $SAMPLE`"
-} done
-
+# Determine sample files and names
+#loadSamples $FILE_SAMPLES
+# Cannot declare in function and use outside, source to fake call a function
+source $DIR_BASE/samplr.sh
 echo "Using samples:" ${SAMPLES[@]}
-
-TEST=`arrayGet INPUT s2`
-echo ${TEST[@]//R1/R2}
 
 # Bash can't export arrays, just export another variable with the array info
 export SAMPLELIST=${SAMPLES[@]}
 
 # Let's fix the folders
-DIR_INPUT=$1
-DIR_OUTPUT=$2
-set +e
-mkdir $DIR_OUTPUT
-#mkdir $DIR_OUTPUT/log
-mkdir $DIR_OUTPUT/wide
-mkdir $DIR_OUTPUT/wide/log
+mkdir -p $DIR_OUTPUT/wide/log
 for SAMPLE in ${SAMPLES[@]}
 do
-	mkdir $DIR_OUTPUT/$SAMPLE
-	mkdir $DIR_OUTPUT/$SAMPLE/log
-	NAME_MULTISAMPLE="${NAME_MULTISAMPLE}-${SAMPLE}"
+	mkdir -p $DIR_OUTPUT/$SAMPLE/log
 done
-export DIR_OUTPUT=$(readlink -f $DIR_OUTPUT)
-set -e
 mv $ROSTRLOG $DIR_OUTPUT
-
-if [[ ! -z $NAME_MULTISAMPLE ]] && [[ ${#NAME_MULTISAMPLE} -lt 50 ]]; then
-	export NAME_MULTISAMPLE=${NAME_MULTISAMPLE}
-else
-	export NAME_MULTISAMPLE="-MULT"
-fi
-echo 'Multisample file name used: ' $NAME_MULTISAMPLE
 
 # Call the plumber to check for defects and shortcuts in our pipeline
 source $DIR_BASE/plumbr.sh
@@ -147,11 +120,18 @@ source $DIR_BASE/plumbr.sh
 # Prepare scheduler
 preSubmit
 
+# Variables for used for saving submission scripts
+NODECOUNT=0
+SUBMITCOUNT=0
+
+# Track and enable cancelling of a run
+FILE_JOBLIST=$DIR_OUTPUT/jobids-$STAMP
+
 # Simplification for RoStr submits
 submitNode() {
+	printf -v SUBMITCOUNT "%03d" `echo $SUBMITCOUNT+1 | bc`
 	export SAMPLE=$SAMPLE
 	export FILE_INPUT=`arrayGet INPUT $SAMPLE`
-	export DIR_INPUT=$DIR_INPUT
 	export FILE_OUTPUT=$DIR_OUTPUT/$SAMPLE/$SAMPLE
 	export DIR_LOG=$DIR_OUTPUT/$SAMPLE/log
 	export FILE_LOG_ERR=$DIR_LOG/${NODENAME}.e${STAMP}
@@ -165,6 +145,7 @@ submitNode() {
 		echo "+ $SAMPLE"
 		submit
 		export declare "JOBIDS_${SAMPLE}_${NODENAME}=${JOBID}"
+		echo ${JOBID} >> $FILE_JOBLIST
 	else
 		echo "- $SAMPLE"
 	fi
@@ -173,6 +154,7 @@ submitNode() {
 # Work your way through the pipeline that is left
 for NODENAME in ${PIPELINE[@]}
 do
+	printf -v NODECOUNT "%02d" `echo $NODECOUNT+1 | bc`
 	echo -e "\nNode: $NODENAME"
 	export NODE=$( readlink -f $DIR_NODES/$NODENAME.sh )
 	export REQS=(`grep '^#RS requires' $NODE | cut -d\  -f3-`)

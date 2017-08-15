@@ -6,7 +6,13 @@ preSubmit() {
 
 submit() {
 	echo "> > Runs:" $NODE
-	USEDVARIABLES=(`grep -o '\$[a-zA-Z0-9_]*' $NODE | sort | uniq`)
+
+	for ARG in ${ARGS[@]}
+	do
+    	echo $ARG
+	done
+
+	USEDVARIABLES=(`grep -o '\$[a-zA-Z0-9_]*\|\${[a-zA-Z0-9_]*' $NODE | sed -e 's/${/$/g' | sort | uniq`)
 	for USEDVAR in ${USEDVARIABLES[@]}
 	do
 		VARNAME=`echo $USEDVAR | cut -b 1 --complement`
